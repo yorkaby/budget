@@ -2,17 +2,33 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Transaction, Category } from '../../types'
 import { parseDate } from '../../lib/dates'
 
-// margin.bottom is extra space BELOW the XAxis labels.
-// XAxis height is the space FOR the labels themselves.
-// Keep margin.bottom small so no wasted white space.
 const CHART_H  = 280
-const MARGIN   = { top: 28, right: 8, left: 8, bottom: 4 }
-const X_HEIGHT = 58   // space for angled labels
-const MAX_BAR  = 32   // cap bar width so they stay slim
+const MARGIN   = { top: 8, right: 8, left: 8, bottom: 4 }
+const X_HEIGHT = 72
+const MAX_BAR  = 32
 
 function fmt(val: number) {
   if (Math.abs(val) >= 1000) return `₪${(val / 1000).toFixed(1)}K`
   return `₪${val.toLocaleString('he-IL', { maximumFractionDigits: 0 })}`
+}
+
+// Custom X-axis tick: name on first line, value on second line (in the empty space)
+function makeTick(data: { name: string; value: number }[]) {
+  return function CustomTick({ x, y, payload }: { x: number; y: number; payload: { value: string } }) {
+    const item = data.find(d => d.name === payload.value)
+    return (
+      <g transform={`translate(${x},${y})`}>
+        <text transform="rotate(-35)" textAnchor="end" fontSize={10} fill="#555" dy={14}>
+          {payload.value}
+        </text>
+        {item && (
+          <text transform="rotate(-35)" textAnchor="end" fontSize={9} fill="#888" dy={28}>
+            {fmt(item.value)}
+          </text>
+        )}
+      </g>
+    )
+  }
 }
 
 function ChartCard({ title, color, children }: { title: string; color: string; children: React.ReactNode }) {
@@ -30,12 +46,7 @@ function ChartCard({ title, color, children }: { title: string; color: string; c
 
 export function ExpensesCategoryBar({
   transactions, categories, year, month,
-}: {
-  transactions: Transaction[]
-  categories: Category[]
-  year: number
-  month: number
-}) {
+}: { transactions: Transaction[]; categories: Category[]; year: number; month: number }) {
   const parentOf: Record<string, string> = {}
   categories.forEach(c => { parentOf[c.name] = c.parent || c.name })
 
@@ -48,25 +59,19 @@ export function ExpensesCategoryBar({
     totals[parent] = (totals[parent] || 0) + tx.amount
   })
 
-  const data = Object.entries(totals)
-    .filter(([, v]) => v > 0)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 8)
+  const data = Object.entries(totals).filter(([, v]) => v > 0)
+    .sort(([, a], [, b]) => b - a).slice(0, 8)
     .map(([name, value]) => ({ name, value: Math.round(value) }))
 
-  if (data.length === 0) return (
-    <ChartCard title="הוצאות" color="text-red-600">
-      <BarChart data={[]}><Bar dataKey="v" /></BarChart>
-    </ChartCard>
-  )
+  if (data.length === 0) return <ChartCard title="הוצאות" color="text-red-600"><BarChart data={[]}><Bar dataKey="v" /></BarChart></ChartCard>
   return (
     <ChartCard title="הוצאות" color="text-red-600">
       <BarChart data={data} margin={MARGIN} barCategoryGap="30%">
         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-        <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#555' }} angle={-35} textAnchor="end" interval={0} height={X_HEIGHT} />
+        <XAxis dataKey="name" tick={makeTick(data)} interval={0} height={X_HEIGHT} />
         <YAxis tickFormatter={fmt} tick={{ fontSize: 10, fill: '#666' }} width={58} />
         <Tooltip formatter={(v: number) => [`₪${v.toLocaleString('he-IL')}`, 'הוצאה']} />
-        <Bar dataKey="value" maxBarSize={MAX_BAR} radius={[3, 3, 0, 0]} label={{ position: 'top', fontSize: 9, fill: '#999', formatter: fmt }}>
+        <Bar dataKey="value" maxBarSize={MAX_BAR} radius={[3, 3, 0, 0]}>
           {data.map((_, i) => <Cell key={i} fill="#dc2626" />)}
         </Bar>
       </BarChart>
@@ -76,12 +81,7 @@ export function ExpensesCategoryBar({
 
 export function IncomeCategoryBar({
   transactions, categories, year, month,
-}: {
-  transactions: Transaction[]
-  categories: Category[]
-  year: number
-  month: number
-}) {
+}: { transactions: Transaction[]; categories: Category[]; year: number; month: number }) {
   const parentOf: Record<string, string> = {}
   categories.forEach(c => { parentOf[c.name] = c.parent || c.name })
 
@@ -94,24 +94,19 @@ export function IncomeCategoryBar({
     totals[parent] = (totals[parent] || 0) + tx.amount
   })
 
-  const data = Object.entries(totals)
-    .filter(([, v]) => v > 0)
+  const data = Object.entries(totals).filter(([, v]) => v > 0)
     .sort(([, a], [, b]) => b - a)
     .map(([name, value]) => ({ name, value: Math.round(value) }))
 
-  if (data.length === 0) return (
-    <ChartCard title="הכנסות" color="text-green-600">
-      <BarChart data={[]}><Bar dataKey="v" /></BarChart>
-    </ChartCard>
-  )
+  if (data.length === 0) return <ChartCard title="הכנסות" color="text-green-600"><BarChart data={[]}><Bar dataKey="v" /></BarChart></ChartCard>
   return (
     <ChartCard title="הכנסות" color="text-green-600">
       <BarChart data={data} margin={MARGIN} barCategoryGap="30%">
         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-        <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#555' }} angle={-35} textAnchor="end" interval={0} height={X_HEIGHT} />
+        <XAxis dataKey="name" tick={makeTick(data)} interval={0} height={X_HEIGHT} />
         <YAxis tickFormatter={fmt} tick={{ fontSize: 10, fill: '#666' }} width={58} />
         <Tooltip formatter={(v: number) => [`₪${v.toLocaleString('he-IL')}`, 'הכנסה']} />
-        <Bar dataKey="value" maxBarSize={MAX_BAR} radius={[3, 3, 0, 0]} label={{ position: 'top', fontSize: 9, fill: '#999', formatter: fmt }}>
+        <Bar dataKey="value" maxBarSize={MAX_BAR} radius={[3, 3, 0, 0]}>
           {data.map((_, i) => <Cell key={i} fill="#16a34a" />)}
         </Bar>
       </BarChart>

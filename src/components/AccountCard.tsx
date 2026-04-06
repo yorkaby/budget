@@ -53,8 +53,8 @@ export function AccountGroupColumn({
       <div className="px-3 py-2.5 font-bold text-sm text-center text-white shrink-0" style={{ backgroundColor: color }}>
         {title}
       </div>
-      {/* Rows — flex-1 so they fill available height, pushing total to bottom */}
-      <div className="flex-1 bg-white">
+      {/* Rows — flex-1 fills available height; empty space gets the next alternating color */}
+      <div className="flex-1" style={{ backgroundColor: accounts.length % 2 === 0 ? '#ffffff' : '#f3f3f3' }}>
         {accounts.map((acc, i) => <AccountRow key={acc.name} account={acc} index={i} />)}
       </div>
       {/* Total — always pinned to bottom */}
