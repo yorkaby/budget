@@ -129,11 +129,10 @@ export function Dashboard() {
         <SummaryCard label="הוצאות החודש" value={formatCurrency(totalExpense)}
           color="text-red-600" bg="bg-red-50" border="border-red-100" />
         <SummaryCard label="נטו החודש" value={formatCurrency(totalIncome - totalExpense)}
-          color={totalIncome - totalExpense >= 0 ? 'text-blue-600' : 'text-red-600'}
+          color={totalIncome - totalExpense >= 0 ? 'text-gray-900' : 'text-red-600'}
           bg="bg-blue-50" border="border-blue-100" />
-        <SummaryCard label="סך ההון" value={formatCurrency(wealthTotal)}
-          color="text-gray-900" bg="bg-gray-50" border="border-gray-200"
-          sub={`קצר ${formatCurrency(shortTotal)} · ארוך ${formatCurrency(longTotal)}`} />
+        <SummaryCard label="הון כולל" value={formatCurrency(wealthTotal)}
+          color="text-blue-600" bg="bg-gray-50" border="border-gray-200" />
       </div>
 
       {/* 4. Charts */}
