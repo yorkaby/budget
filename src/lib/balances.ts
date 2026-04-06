@@ -38,8 +38,12 @@ export const GROUP_LABELS: Record<AccountGroup, string> = {
 export const LOAN_ACCOUNTS = new Set(['הלוואה דיסקונט'])
 export const EUR_ACCOUNTS = new Set(['LAYA'])
 
+// דיסקונט adds ₪80 after the 17th of the month (expected upcoming income)
+const DISKONT_LATE_MONTH_BONUS = 80
+export const DISKONT_ACCOUNT = 'דיסקונט'
+
 export function computeBalance(accountName: string, transactions: Transaction[]): number {
-  return transactions.reduce((sum, tx) => {
+  const base = transactions.reduce((sum, tx) => {
     if (tx.type === 'הכנסה' && tx.from_account === accountName) {
       return sum + tx.amount
     }
@@ -54,6 +58,11 @@ export function computeBalance(accountName: string, transactions: Transaction[])
     }
     return sum
   }, 0)
+
+  if (accountName === DISKONT_ACCOUNT && new Date().getDate() > 17) {
+    return Math.round((base + DISKONT_LATE_MONTH_BONUS) * 100) / 100
+  }
+  return Math.round(base * 100) / 100
 }
 
 // LAYA balance in EUR: amount ÷ exchange rate stored in description field.
