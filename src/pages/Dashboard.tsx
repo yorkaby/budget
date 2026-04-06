@@ -1,13 +1,13 @@
 import { RefreshCw } from 'lucide-react'
 import { useTransactions, useRefreshAll } from '../hooks/useTransactions'
 import { useCategories } from '../hooks/useCategories'
-import { buildAccounts, GROUP_LABELS, AccountGroup } from '../lib/balances'
+import { buildAccounts, GROUP_LABELS } from '../lib/balances'
 import { AccountGroupSection } from '../components/AccountCard'
 import { IncomeExpenseBar } from '../components/charts/IncomeExpenseBar'
 import { CategoryPie } from '../components/charts/CategoryPie'
 import { LoadingScreen, ErrorScreen } from '../components/ui/Spinner'
 import { filterByMonth, formatCurrency, getHebrewMonthName } from '../lib/dates'
-import { Account } from '../types'
+import { Account, AccountGroup } from '../types'
 
 const GROUP_ORDER: AccountGroup[] = ['short', 'long', 'savings']
 
