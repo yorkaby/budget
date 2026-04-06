@@ -4,19 +4,21 @@ import { Transaction, Account, AccountGroup } from '../types'
 export const ACCOUNT_GROUPS: Record<string, AccountGroup> = {
   // Short-term (current account envelopes - עו"ש)
   'דיסקונט': 'short',
+  'מזומן': 'short',
   'קניות': 'short',
   'קניות זעתר': 'short',
   'טיפוח': 'short',
   'בילויים': 'short',
   'בלתמים': 'short',
   'LAYA': 'short',
-  'ספורט': 'short',
   // Long-term (money market fund envelopes)
   'חיסכון לחופשה': 'long',
+  'ספורט': 'long',
+  'אירועים': 'long',
   'בריאות אישית': 'long',
   'בריאות זעתר': 'long',
   'חשבונות': 'long',
-  'אירועים': 'long',
+  'Spotify משפחתי': 'long',
   // Savings
   'חשבון מסחר': 'savings',
   'גמל להשקעה': 'savings',
