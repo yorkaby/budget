@@ -86,7 +86,7 @@ const SHORT_TERM_DEPOSITS = [
   { account: 'קניות זעתר', amount: 250 },
   { account: 'טיפוח', amount: 250 },
   { account: 'בילויים', amount: 390 },
-  { account: 'בלתמים', amount: 290.79, isAbsorber: true },
+  { account: 'בלתמים', amount: 290.99, isAbsorber: true },
 ]
 
 function roundTo5(n: number): number {
