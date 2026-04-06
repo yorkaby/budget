@@ -1,16 +1,22 @@
 import { useState, useEffect, useMemo } from 'react'
-import { RefreshCw, Info } from 'lucide-react'
+import { RefreshCw, Info, TrendingUp, TrendingDown } from 'lucide-react'
 import { useBudget } from '../hooks/useBudget'
 import { LoadingScreen, ErrorScreen } from '../components/ui/Spinner'
 import { formatCurrency } from '../lib/dates'
 import { clsx } from 'clsx'
+
+const CAT_COLORS = [
+  { bg: 'bg-blue-50',   border: 'border-blue-200',   header: 'bg-blue-50',   text: 'text-blue-700',   bar: 'bg-blue-400'   },
+  { bg: 'bg-purple-50', border: 'border-purple-200', header: 'bg-purple-50', text: 'text-purple-700', bar: 'bg-purple-400' },
+  { bg: 'bg-green-50',  border: 'border-green-200',  header: 'bg-green-50',  text: 'text-green-700',  bar: 'bg-green-400'  },
+  { bg: 'bg-orange-50', border: 'border-orange-200', header: 'bg-orange-50', text: 'text-orange-700', bar: 'bg-orange-400' },
+]
 
 export function Budget() {
   const { data, isLoading, error, refetch } = useBudget()
   const [editableSalary, setEditableSalary]       = useState(0)
   const [editableUnitPrice, setEditableUnitPrice] = useState(1)
 
-  // Seed editable inputs once data loads
   useEffect(() => {
     if (data) {
       setEditableSalary(data.salary)
@@ -98,6 +104,63 @@ export function Budget() {
             {formatCurrency(remaining)}
           </p>
         </div>
+      </div>
+
+      {/* ─── Allocation categories ────────────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+        {data.categories.map((cat, ci) => {
+          const c = CAT_COLORS[ci % CAT_COLORS.length]
+          const pct = cat.allocated > 0 ? Math.min(100, Math.round((cat.actualFromSheet / cat.allocated) * 100)) : 0
+          const over = cat.actualFromSheet > cat.allocated
+          return (
+            <div key={ci} className={clsx('border rounded-xl overflow-hidden', c.border)}>
+              {/* Card header */}
+              <div className={clsx('px-4 py-3', c.header)}>
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="font-bold text-gray-900 text-sm">{cat.name}</h3>
+                  <span className={clsx('text-xs font-semibold', c.text)}>
+                    {formatCurrency(cat.allocated)}
+                  </span>
+                </div>
+                {/* Progress bar */}
+                <div className="w-full bg-white/70 rounded-full h-1.5 mt-2">
+                  <div
+                    className={clsx('h-1.5 rounded-full transition-all', over ? 'bg-red-500' : c.bar)}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                  <span className="text-xs text-gray-500">בפועל: {formatCurrency(cat.actualFromSheet)}</span>
+                  <span className={clsx('text-xs font-medium', over ? 'text-red-600' : 'text-gray-500')}>
+                    {pct}%
+                  </span>
+                </div>
+              </div>
+              {/* Items */}
+              <div className="bg-white divide-y divide-gray-50">
+                {cat.items.map((item, ii) => (
+                  <div key={ii} className="flex items-center justify-between px-4 py-2">
+                    <span className="text-xs text-gray-600">{item.name}</span>
+                    <span className="text-xs font-medium text-gray-800">{formatCurrency(item.amount)}</span>
+                  </div>
+                ))}
+                {cat.items.length === 0 && (
+                  <div className="px-4 py-3 text-xs text-gray-400">אין פריטים</div>
+                )}
+              </div>
+              {/* Actual vs allocated footer */}
+              <div className={clsx(
+                'px-4 py-2 flex items-center gap-1 text-xs',
+                over ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-500'
+              )}>
+                {over
+                  ? <TrendingUp className="w-3 h-3 flex-shrink-0" />
+                  : <TrendingDown className="w-3 h-3 flex-shrink-0" />}
+                הפרש: {formatCurrency(cat.allocated - cat.actualFromSheet)}
+              </div>
+            </div>
+          )
+        })}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
@@ -232,11 +295,9 @@ export function Budget() {
                               key={j}
                               className={clsx(
                                 'w-2 h-2 rounded-full',
-                                j < op.total! - (op.total! - (op.current! - 1) - 1) - 1
-                                  ? 'bg-green-400'
-                                  : j < op.current!
-                                    ? 'bg-blue-400'
-                                    : 'bg-gray-200'
+                                j < (op.current! - 1) ? 'bg-green-400'
+                                  : j < op.current! ? 'bg-blue-400'
+                                  : 'bg-gray-200'
                               )}
                             />
                           ))}
