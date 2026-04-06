@@ -18,13 +18,22 @@ export function Budget() {
     }
   }, [data])
 
+  // ALL hooks must be before any conditional returns
+  const parsedTempOps = useMemo(() => (data?.tempOps ?? []).map(op => {
+    const m = op.description.match(/תשלום\s+(\d+)\/(\d+)/)
+    return {
+      ...op,
+      current: m ? parseInt(m[1]) : undefined,
+      total:   m ? parseInt(m[2]) : undefined,
+    }
+  }), [data?.tempOps])
+
   if (isLoading) return <LoadingScreen />
   if (error || !data) return <ErrorScreen message={(error as Error)?.message ?? 'שגיאה'} />
 
   const longTermDeposits  = data.deposits.filter(d => d.isLongTerm)
   const shortTermDeposits = data.deposits.filter(d => !d.isLongTerm)
 
-  // Long-term: re-derive units from editable unit price
   const longRows = longTermDeposits.map(d => ({
     ...d,
     computedUnits: editableUnitPrice > 0 ? Math.round(d.amount / editableUnitPrice) : 0,
@@ -34,28 +43,12 @@ export function Budget() {
   const longActualCost  = longTotalUnits * editableUnitPrice
   const longDelta       = longTotalTarget - longActualCost
 
-  // Short-term totals
-  const shortTotal = shortTermDeposits.reduce((s, d) => s + d.amount, 0)
-
-  // Fixed ops total
-  const fixedTotal = data.fixedOps.reduce((s, f) => s + f.amount, 0)
-
-  // Installment totals
+  const shortTotal   = shortTermDeposits.reduce((s, d) => s + d.amount, 0)
+  const fixedTotal   = data.fixedOps.reduce((s, f) => s + f.amount, 0)
   const tempExpenses = data.tempOps.filter(t => t.type === 'הוצאה').reduce((s, t) => s + t.amount, 0)
   const tempIncome   = data.tempOps.filter(t => t.type === 'הכנסה').reduce((s, t) => s + t.amount, 0)
-
-  const totalOut   = longTotalTarget + shortTotal + fixedTotal + tempExpenses - tempIncome
-  const remaining  = editableSalary - totalOut
-
-  // Parse installment progress from description "תשלום X/Y"
-  const parsedTempOps = useMemo(() => data.tempOps.map(op => {
-    const m = op.description.match(/תשלום\s+(\d+)\/(\d+)/)
-    return {
-      ...op,
-      current: m ? parseInt(m[1]) : undefined,
-      total:   m ? parseInt(m[2]) : undefined,
-    }
-  }), [data.tempOps])
+  const totalOut     = longTotalTarget + shortTotal + fixedTotal + tempExpenses - tempIncome
+  const remaining    = editableSalary - totalOut
 
   return (
     <div className="p-4 md:p-6 max-w-screen-xl mx-auto" dir="rtl">
