@@ -36,6 +36,7 @@ export const GROUP_LABELS: Record<AccountGroup, string> = {
 }
 
 export const LOAN_ACCOUNTS = new Set(['הלוואה דיסקונט'])
+export const EUR_ACCOUNTS = new Set(['LAYA'])
 
 export function computeBalance(accountName: string, transactions: Transaction[]): number {
   return transactions.reduce((sum, tx) => {
@@ -55,6 +56,21 @@ export function computeBalance(accountName: string, transactions: Transaction[])
   }, 0)
 }
 
+// LAYA balance in EUR: amount ÷ exchange rate stored in description field.
+// If description is a number → it's the ILS/EUR rate (divide by it).
+// If description is text → amount is already in EUR (divide by 1).
+export function computeEurBalance(accountName: string, transactions: Transaction[]): number {
+  return transactions.reduce((sum, tx) => {
+    const rate = parseFloat(tx.description) || 1
+    const eur = tx.amount / rate
+    if (tx.type === 'הכנסה' && tx.from_account === accountName) return sum + eur
+    if (tx.type === 'הוצאה' && tx.from_account === accountName) return sum - eur
+    if (tx.type === 'העברה' && tx.to_account === accountName) return sum + eur
+    if (tx.type === 'העברה' && tx.from_account === accountName) return sum - eur
+    return sum
+  }, 0)
+}
+
 export function buildAccounts(transactions: Transaction[]): Account[] {
   // Collect all unique account names from transactions
   const names = new Set<string>()
@@ -68,12 +84,16 @@ export function buildAccounts(transactions: Transaction[]): Account[] {
 
   return Array.from(names)
     .filter(name => ACCOUNT_GROUPS[name])
-    .map(name => ({
-      name,
-      group: ACCOUNT_GROUPS[name],
-      balance: computeBalance(name, transactions),
-      isLoan: LOAN_ACCOUNTS.has(name),
-    }))
+    .map(name => {
+      const isEur = EUR_ACCOUNTS.has(name)
+      return {
+        name,
+        group: ACCOUNT_GROUPS[name],
+        balance: isEur ? 0 : computeBalance(name, transactions),
+        isLoan: LOAN_ACCOUNTS.has(name),
+        eurBalance: isEur ? computeEurBalance(name, transactions) : undefined,
+      }
+    })
     .sort((a, b) => {
       const groupOrder: Record<AccountGroup, number> = { short: 0, long: 1, savings: 2 }
       return groupOrder[a.group] - groupOrder[b.group]

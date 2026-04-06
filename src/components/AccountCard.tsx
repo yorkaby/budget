@@ -5,7 +5,13 @@ import { clsx } from 'clsx'
 
 export function AccountCard({ account }: { account: Account }) {
   const navigate = useNavigate()
-  const isNegative = account.balance < 0
+  const isEur = account.eurBalance !== undefined
+  const displayBalance = isEur ? account.eurBalance! : account.balance
+  const isNegative = displayBalance < 0
+
+  const formattedBalance = isEur
+    ? `€${Math.abs(displayBalance).toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}${isNegative ? '-' : ''}`
+    : formatCurrency(account.balance)
 
   return (
     <button
@@ -22,7 +28,7 @@ export function AccountCard({ account }: { account: Account }) {
         'text-xl font-bold mt-1',
         isNegative ? 'text-red-600' : 'text-gray-900'
       )}>
-        {formatCurrency(account.balance)}
+        {formattedBalance}
       </p>
     </button>
   )
