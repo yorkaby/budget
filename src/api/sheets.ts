@@ -35,6 +35,7 @@ export async function fetchTransactions(): Promise<Transaction[]> {
     category: row[5] ?? '',
     amount: parseAmount(row[6] ?? ''),
     description: row[7] ?? '',
+    monthTag: parseInt(row[9] ?? '') || undefined,
   })).filter(tx => tx.date && tx.type && tx.amount !== 0)
 }
 

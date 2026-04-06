@@ -9,6 +9,7 @@ export interface Transaction {
   category: string
   amount: number
   description: string
+  monthTag?: number  // column J — month number (1-based) used for עו"ש calculation
 }
 
 export type AccountGroup = 'short' | 'long' | 'savings'

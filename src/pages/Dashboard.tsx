@@ -32,11 +32,15 @@ export function Dashboard() {
   const totalIncome  = monthTx.filter(t => t.type === 'הכנסה').reduce((s, t) => s + t.amount, 0)
   const totalExpense = monthTx.filter(t => t.type === 'הוצאה').reduce((s, t) => s + t.amount, 0)
 
-  // עו"ש: sum of checking envelope balances + net monthly income (income − expenses)
+  // עו"ש: sum of checking envelope balances + SUM(G where J = current month, 1-based)
   const checkingBalance = accounts
     .filter(a => CHECKING_ACCOUNTS.has(a.name))
     .reduce((s, a) => s + a.balance, 0)
-  const checkingTotal = checkingBalance + (totalIncome - totalExpense)
+  const currentMonth1 = month + 1  // JS month is 0-based; Google Sheets MONTH() is 1-based
+  const monthTagSum = transactions
+    .filter(t => t.monthTag === currentMonth1)
+    .reduce((s, t) => s + t.amount, 0)
+  const checkingTotal = checkingBalance + monthTagSum
 
   const byGroup: Record<AccountGroup, Account[]> = { short: [], long: [], savings: [] }
   accounts.forEach(a => byGroup[a.group].push(a))
