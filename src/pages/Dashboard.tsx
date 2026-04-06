@@ -12,7 +12,6 @@ import { useEurRate } from '../hooks/useEurRate'
 
 const GROUP_ORDER: AccountGroup[] = ['short', 'long', 'savings']
 
-// Accounts that make up "עו"ש" (liquid checking position)
 const CHECKING_ACCOUNTS = new Set(['דיסקונט', 'קניות', 'קניות זעתר', 'טיפוח', 'בילויים', 'בלתמים'])
 
 export function Dashboard() {
@@ -34,11 +33,10 @@ export function Dashboard() {
   const totalIncome  = monthTx.filter(t => t.type === 'הכנסה').reduce((s, t) => s + t.amount, 0)
   const totalExpense = monthTx.filter(t => t.type === 'הוצאה').reduce((s, t) => s + t.amount, 0)
 
-  // עו"ש: sum of checking envelope balances + SUM(G where J = current month, 1-based)
   const checkingBalance = accounts
     .filter(a => CHECKING_ACCOUNTS.has(a.name))
     .reduce((s, a) => s + a.balance, 0)
-  const currentMonth1 = month + 1  // JS month is 0-based; Google Sheets MONTH() is 1-based
+  const currentMonth1 = month + 1
   const monthTagSum = transactions
     .filter(t => t.monthTag === currentMonth1)
     .reduce((s, t) => s + t.amount, 0)
@@ -47,7 +45,6 @@ export function Dashboard() {
   const byGroup: Record<AccountGroup, Account[]> = { short: [], long: [], savings: [] }
   accounts.forEach(a => byGroup[a.group].push(a))
 
-  // Short-term total: ILS accounts + LAYA EUR × live BOI rate (fallback: last tx rate)
   const shortTotal = byGroup.short.reduce((s, a) => {
     if (a.eurBalance !== undefined) {
       const rate = eurRate ?? a.balanceILS! / (a.eurBalance || 1)
@@ -55,6 +52,9 @@ export function Dashboard() {
     }
     return s + a.balance
   }, 0)
+
+  // Determine max rows so all columns are equal height
+  const maxRows = Math.max(...GROUP_ORDER.map(g => byGroup[g].length))
 
   const lastUpdated = dataUpdatedAt
     ? new Date(dataUpdatedAt).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
@@ -82,49 +82,8 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* Summary cards — 4 across */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-4 md:mb-6">
-        <SummaryCard
-          label="הכנסות החודש"
-          value={formatCurrency(totalIncome)}
-          color="text-green-600"
-          bg="bg-green-50"
-          border="border-green-100"
-        />
-        <SummaryCard
-          label="הוצאות החודש"
-          value={formatCurrency(totalExpense)}
-          color="text-red-600"
-          bg="bg-red-50"
-          border="border-red-100"
-        />
-        <SummaryCard
-          label="נטו החודש"
-          value={formatCurrency(totalIncome - totalExpense)}
-          color={totalIncome - totalExpense >= 0 ? 'text-blue-600' : 'text-red-600'}
-          bg="bg-blue-50"
-          border="border-blue-100"
-        />
-        <SummaryCard
-          label='עו"ש'
-          value={formatCurrency(checkingTotal)}
-          color={checkingTotal >= 0 ? 'text-gray-900' : 'text-red-600'}
-          bg="bg-gray-50"
-          border="border-gray-200"
-          sub={`מעטפות: ${formatCurrency(checkingBalance)}`}
-        />
-      </div>
-
-      {/* 4 charts in 2×2 grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mb-6">
-        <ExpensesCategoryBar transactions={transactions} categories={categories} year={year} month={month} />
-        <IncomeCategoryBar   transactions={transactions} categories={categories} year={year} month={month} />
-        <SavingsBalancesBar  accounts={accounts} />
-        <LongTermBalancesBar accounts={accounts} />
-      </div>
-
-      {/* Account groups — 3 vertical columns side by side */}
-      <div className="flex flex-col md:flex-row gap-3 md:gap-4">
+      {/* 1. Account group columns — 3 vertical side by side */}
+      <div className="flex flex-col md:flex-row gap-3 md:gap-4 mb-4 md:mb-6">
         {GROUP_ORDER.map(group => {
           const accs = byGroup[group]
           if (!accs.length) return null
@@ -138,9 +97,33 @@ export function Dashboard() {
               title={GROUP_LABELS[group]}
               accounts={accs}
               total={total}
+              targetRows={maxRows}
             />
           )
         })}
+      </div>
+
+      {/* 2. Summary cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-4 md:mb-6">
+        <SummaryCard label="הכנסות החודש" value={formatCurrency(totalIncome)}
+          color="text-green-600" bg="bg-green-50" border="border-green-100" />
+        <SummaryCard label="הוצאות החודש" value={formatCurrency(totalExpense)}
+          color="text-red-600" bg="bg-red-50" border="border-red-100" />
+        <SummaryCard label="נטו החודש" value={formatCurrency(totalIncome - totalExpense)}
+          color={totalIncome - totalExpense >= 0 ? 'text-blue-600' : 'text-red-600'}
+          bg="bg-blue-50" border="border-blue-100" />
+        <SummaryCard label='עו"ש' value={formatCurrency(checkingTotal)}
+          color={checkingTotal >= 0 ? 'text-gray-900' : 'text-red-600'}
+          bg="bg-gray-50" border="border-gray-200"
+          sub={`מעטפות: ${formatCurrency(checkingBalance)}`} />
+      </div>
+
+      {/* 3. Charts — 2×2 grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+        <ExpensesCategoryBar transactions={transactions} categories={categories} year={year} month={month} />
+        <IncomeCategoryBar   transactions={transactions} categories={categories} year={year} month={month} />
+        <SavingsBalancesBar  accounts={accounts} />
+        <LongTermBalancesBar accounts={accounts} />
       </div>
     </div>
   )
@@ -149,12 +132,7 @@ export function Dashboard() {
 function SummaryCard({
   label, value, color, bg, border, sub,
 }: {
-  label: string
-  value: string
-  color: string
-  bg: string
-  border: string
-  sub?: string
+  label: string; value: string; color: string; bg: string; border: string; sub?: string
 }) {
   return (
     <div className={`rounded-xl border p-3 md:p-5 ${bg} ${border}`}>

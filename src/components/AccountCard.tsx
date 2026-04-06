@@ -3,19 +3,13 @@ import { Account, AccountGroup } from '../types'
 import { formatCurrency } from '../lib/dates'
 import { clsx } from 'clsx'
 
-const GROUP_HEADER_STYLE: Record<AccountGroup, string> = {
-  short:   'bg-blue-50 text-blue-800 border-blue-200',
-  long:    'bg-purple-50 text-purple-800 border-purple-200',
-  savings: 'bg-teal-50 text-teal-800 border-teal-200',
+// Custom brand colours per group
+const GROUP_COLOR: Record<AccountGroup, string> = {
+  short:   '#4285f4',
+  long:    '#434343',
+  savings: '#134f5c',
 }
 
-const GROUP_TOTAL_STYLE: Record<AccountGroup, string> = {
-  short:   'bg-blue-50 text-blue-900 border-blue-200',
-  long:    'bg-purple-50 text-purple-900 border-purple-200',
-  savings: 'bg-teal-50 text-teal-900 border-teal-200',
-}
-
-// Individual row inside a vertical column
 function AccountRow({ account }: { account: Account }) {
   const navigate = useNavigate()
   const isEur = account.eurBalance !== undefined
@@ -29,7 +23,7 @@ function AccountRow({ account }: { account: Account }) {
   return (
     <button
       onClick={() => navigate(`/accounts/${encodeURIComponent(account.name)}`)}
-      className="w-full flex items-center justify-between px-3 py-2 border-b border-gray-100 hover:bg-gray-50 transition-colors last:border-b-0"
+      className="w-full flex items-center justify-between px-3 py-2.5 border-b border-gray-100 hover:bg-gray-50 transition-colors"
     >
       <span className={clsx('text-sm font-medium', isNegative ? 'text-red-600' : 'text-gray-700')}>
         {account.name}
@@ -41,38 +35,48 @@ function AccountRow({ account }: { account: Account }) {
   )
 }
 
-// Single vertical column for one account group
+function EmptyRow() {
+  return <div className="px-3 py-2.5 border-b border-gray-100">&nbsp;</div>
+}
+
 export function AccountGroupColumn({
   title,
   accounts,
   total,
   group,
+  targetRows,
 }: {
   title: string
   accounts: Account[]
   total: number
   group: AccountGroup
+  targetRows: number
 }) {
+  const color = GROUP_COLOR[group]
+  const padCount = Math.max(0, targetRows - accounts.length)
   const isNegativeTotal = total < 0
+
   return (
     <div className="flex-1 min-w-0 bg-white border border-gray-200 rounded-xl overflow-hidden">
       {/* Header */}
-      <div className={clsx('px-3 py-2.5 border-b font-bold text-sm text-center', GROUP_HEADER_STYLE[group])}>
+      <div
+        className="px-3 py-2.5 border-b font-bold text-sm text-center text-white"
+        style={{ backgroundColor: color }}
+      >
         {title}
       </div>
-      {/* Rows */}
-      <div className="divide-y divide-gray-50">
-        {accounts.map(acc => (
-          <AccountRow key={acc.name} account={acc} />
-        ))}
+      {/* Account rows */}
+      <div>
+        {accounts.map(acc => <AccountRow key={acc.name} account={acc} />)}
+        {Array.from({ length: padCount }, (_, i) => <EmptyRow key={`pad-${i}`} />)}
       </div>
       {/* Total */}
-      <div className={clsx(
-        'px-3 py-2.5 flex items-center justify-between border-t font-bold text-sm',
-        GROUP_TOTAL_STYLE[group],
-      )}>
+      <div
+        className="px-3 py-2.5 flex items-center justify-between border-t font-bold text-sm text-white"
+        style={{ backgroundColor: color }}
+      >
         <span>סה"כ</span>
-        <span className={clsx('tabular-nums', isNegativeTotal ? 'text-red-700' : '')}>
+        <span className={clsx('tabular-nums', isNegativeTotal ? 'opacity-80' : '')}>
           {formatCurrency(total)}
         </span>
       </div>
@@ -128,9 +132,7 @@ export function AccountGroupSection({
         </span>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
-        {accounts.map(acc => (
-          <AccountCard key={acc.name} account={acc} />
-        ))}
+        {accounts.map(acc => <AccountCard key={acc.name} account={acc} />)}
       </div>
     </div>
   )
