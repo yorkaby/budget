@@ -65,8 +65,6 @@ export function Dashboard() {
   const savingsTotal = byGroup.savings.reduce((s, a) => s + a.balance, 0)
   const wealthTotal  = shortTotal + longTotal + savingsTotal
 
-  const maxRows = Math.max(...GROUP_ORDER.map(g => byGroup[g].length))
-
   const lastUpdated = dataUpdatedAt
     ? new Date(dataUpdatedAt).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
     : null
@@ -116,7 +114,6 @@ export function Dashboard() {
               title={GROUP_LABELS[group]}
               accounts={accs}
               total={total}
-              targetRows={maxRows}
             />
           )
         })}
@@ -130,9 +127,9 @@ export function Dashboard() {
           color="text-red-600" bg="bg-red-50" border="border-red-100" />
         <SummaryCard label="נטו החודש" value={formatCurrency(totalIncome - totalExpense)}
           color={totalIncome - totalExpense >= 0 ? 'text-gray-900' : 'text-red-600'}
-          bg="bg-blue-50" border="border-blue-100" />
+          bg="bg-gray-50" border="border-gray-200" />
         <SummaryCard label="הון כולל" value={formatCurrency(wealthTotal)}
-          color="text-blue-600" bg="bg-gray-50" border="border-gray-200" />
+          color="text-blue-600" bg="bg-blue-50" border="border-blue-100" />
       </div>
 
       {/* 4. Charts */}

@@ -2,7 +2,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Account } from '../../types'
 
 const CHART_H  = 280
-const MARGIN   = { top: 20, right: 8, left: 8, bottom: 4 }
+const MARGIN   = { top: 28, right: 8, left: 8, bottom: 4 }
 const X_HEIGHT = 58
 const MAX_BAR  = 32
 const NEG = '#dc2626'

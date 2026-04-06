@@ -6,7 +6,7 @@ import { parseDate } from '../../lib/dates'
 // XAxis height is the space FOR the labels themselves.
 // Keep margin.bottom small so no wasted white space.
 const CHART_H  = 280
-const MARGIN   = { top: 20, right: 8, left: 8, bottom: 4 }
+const MARGIN   = { top: 28, right: 8, left: 8, bottom: 4 }
 const X_HEIGHT = 58   // space for angled labels
 const MAX_BAR  = 32   // cap bar width so they stay slim
 

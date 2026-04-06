@@ -38,30 +38,28 @@ function EmptyRow({ index }: { index: number }) {
 }
 
 export function AccountGroupColumn({
-  title, accounts, total, group, targetRows,
+  title, accounts, total, group,
 }: {
   title: string
   accounts: Account[]
   total: number
   group: AccountGroup
-  targetRows: number
 }) {
   const color = GROUP_COLOR[group]
-  const padCount = Math.max(0, targetRows - accounts.length)
 
   return (
-    <div className="flex-1 min-w-0 bg-white border border-gray-200 rounded-xl overflow-hidden">
-      <div className="px-3 py-2.5 border-b font-bold text-sm text-center text-white" style={{ backgroundColor: color }}>
+    <div className="flex-1 min-w-0 border border-gray-200 rounded-xl overflow-hidden flex flex-col">
+      {/* Header */}
+      <div className="px-3 py-2.5 font-bold text-sm text-center text-white shrink-0" style={{ backgroundColor: color }}>
         {title}
       </div>
-      <div>
+      {/* Rows — flex-1 so they fill available height, pushing total to bottom */}
+      <div className="flex-1 bg-white">
         {accounts.map((acc, i) => <AccountRow key={acc.name} account={acc} index={i} />)}
-        {Array.from({ length: padCount }, (_, i) => (
-          <EmptyRow key={`pad-${i}`} index={accounts.length + i} />
-        ))}
       </div>
+      {/* Total — always pinned to bottom */}
       <div
-        className="px-3 py-2.5 flex items-center justify-between border-t font-bold text-sm text-white"
+        className="px-3 py-2.5 flex items-center justify-between font-bold text-sm text-white shrink-0"
         style={{ backgroundColor: color }}
       >
         <span>סה"כ</span>
