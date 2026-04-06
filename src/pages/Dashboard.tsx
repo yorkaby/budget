@@ -8,7 +8,6 @@ import { SavingsBalancesBar, LongTermBalancesBar } from '../components/charts/Ca
 import { LoadingScreen, ErrorScreen } from '../components/ui/Spinner'
 import { filterByMonth, formatCurrency, getHebrewMonthName } from '../lib/dates'
 import { Account, AccountGroup } from '../types'
-import { parseDate } from '../lib/dates'
 
 const GROUP_ORDER: AccountGroup[] = ['short', 'long', 'savings']
 
@@ -33,12 +32,11 @@ export function Dashboard() {
   const totalIncome  = monthTx.filter(t => t.type === 'הכנסה').reduce((s, t) => s + t.amount, 0)
   const totalExpense = monthTx.filter(t => t.type === 'הוצאה').reduce((s, t) => s + t.amount, 0)
 
-  // עו"ש: sum of checking envelope balances + all current-month transaction amounts
+  // עו"ש: sum of checking envelope balances + net monthly income (income − expenses)
   const checkingBalance = accounts
     .filter(a => CHECKING_ACCOUNTS.has(a.name))
     .reduce((s, a) => s + a.balance, 0)
-  const monthTxSum = monthTx.reduce((s, t) => s + t.amount, 0)
-  const checkingTotal = checkingBalance + monthTxSum
+  const checkingTotal = checkingBalance + (totalIncome - totalExpense)
 
   const byGroup: Record<AccountGroup, Account[]> = { short: [], long: [], savings: [] }
   accounts.forEach(a => byGroup[a.group].push(a))

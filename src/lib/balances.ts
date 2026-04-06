@@ -65,6 +65,17 @@ export function computeBalance(accountName: string, transactions: Transaction[])
   return Math.round(base * 100) / 100
 }
 
+// Returns the most recent EUR/ILS rate seen in LAYA transactions (from description field)
+export function getLastEurRate(accountName: string, transactions: Transaction[]): number {
+  const relevant = transactions.filter(tx => {
+    const isLaya = tx.from_account === accountName || tx.to_account === accountName
+    return isLaya && parseFloat(tx.description) > 0
+  })
+  if (!relevant.length) return 1
+  // Use the last one (transactions are already ordered oldest→newest from the sheet)
+  return parseFloat(relevant[relevant.length - 1].description)
+}
+
 // LAYA balance in EUR: amount ÷ exchange rate stored in description field.
 // If description is a number → it's the ILS/EUR rate (divide by it).
 // If description is text → amount is already in EUR (divide by 1).
@@ -95,14 +106,16 @@ export function buildAccounts(transactions: Transaction[]): Account[] {
     .filter(name => ACCOUNT_GROUPS[name])
     .map(name => {
       const isEur = EUR_ACCOUNTS.has(name)
-      const ilsBalance = computeBalance(name, transactions)
+      const eurBal  = isEur ? computeEurBalance(name, transactions) : undefined
+      const eurRate = isEur ? getLastEurRate(name, transactions) : undefined
       return {
         name,
         group: ACCOUNT_GROUPS[name],
-        balance: isEur ? 0 : ilsBalance,
+        balance: isEur ? 0 : computeBalance(name, transactions),
         isLoan: LOAN_ACCOUNTS.has(name),
-        eurBalance: isEur ? computeEurBalance(name, transactions) : undefined,
-        balanceILS: isEur ? ilsBalance : undefined,
+        eurBalance: eurBal,
+        // ILS market value = EUR balance × latest exchange rate
+        balanceILS: isEur ? (eurBal ?? 0) * (eurRate ?? 1) : undefined,
       }
     })
     .sort((a, b) => {
