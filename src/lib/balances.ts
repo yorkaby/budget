@@ -29,6 +29,13 @@ export const ACCOUNT_GROUPS: Record<string, AccountGroup> = {
   'הלוואה אמא': 'savings',
 }
 
+// Canonical display order for each group (matches Google Sheets layout)
+export const GROUP_ACCOUNT_ORDER: Record<AccountGroup, string[]> = {
+  short:   ['דיסקונט', 'מזומן', 'קניות', 'קניות זעתר', 'טיפוח', 'בילויים', 'בלתמים', 'LAYA'],
+  long:    ['חיסכון לחופשה', 'ספורט', 'אירועים', 'בריאות אישית', 'בריאות זעתר', 'חשבונות', 'Spotify משפחתי'],
+  savings: ['קרן פנסיה', 'קרן השתלמות', 'גמל להשקעה', 'חשבון מסחר', 'קרן חירום', 'הלוואה אמא', 'הלוואה דיסקונט'],
+}
+
 export const GROUP_LABELS: Record<AccountGroup, string> = {
   short: 'מעטפות טווח קצר 💸',
   long: 'מעטפות טווח ארוך ✉️',

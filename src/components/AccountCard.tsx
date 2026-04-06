@@ -3,48 +3,42 @@ import { Account, AccountGroup } from '../types'
 import { formatCurrency } from '../lib/dates'
 import { clsx } from 'clsx'
 
-// Custom brand colours per group
 const GROUP_COLOR: Record<AccountGroup, string> = {
   short:   '#4285f4',
   long:    '#434343',
   savings: '#134f5c',
 }
 
-function AccountRow({ account }: { account: Account }) {
+function AccountRow({ account, index }: { account: Account; index: number }) {
   const navigate = useNavigate()
   const isEur = account.eurBalance !== undefined
   const displayBalance = isEur ? account.eurBalance! : account.balance
-  const isNegative = displayBalance < 0
 
   const formatted = isEur
-    ? `€${Math.abs(displayBalance).toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}${isNegative ? '-' : ''}`
+    ? `€${Math.abs(displayBalance).toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
     : formatCurrency(account.balance)
+
+  const bg = index % 2 === 0 ? '#ffffff' : '#f3f3f3'
 
   return (
     <button
       onClick={() => navigate(`/accounts/${encodeURIComponent(account.name)}`)}
-      className="w-full flex items-center justify-between px-3 py-2.5 border-b border-gray-100 hover:bg-gray-50 transition-colors"
+      className="w-full flex items-center justify-between px-3 py-2.5 border-b border-gray-100 hover:brightness-95 transition-all"
+      style={{ backgroundColor: bg }}
     >
-      <span className={clsx('text-sm font-medium', isNegative ? 'text-red-600' : 'text-gray-700')}>
-        {account.name}
-      </span>
-      <span className={clsx('text-sm font-semibold tabular-nums', isNegative ? 'text-red-600' : 'text-gray-900')}>
-        {formatted}
-      </span>
+      <span className="text-sm font-medium text-gray-800">{account.name}</span>
+      <span className="text-sm font-semibold tabular-nums text-gray-900">{formatted}</span>
     </button>
   )
 }
 
-function EmptyRow() {
-  return <div className="px-3 py-2.5 border-b border-gray-100">&nbsp;</div>
+function EmptyRow({ index }: { index: number }) {
+  const bg = index % 2 === 0 ? '#ffffff' : '#f3f3f3'
+  return <div className="px-3 py-2.5 border-b border-gray-100" style={{ backgroundColor: bg }}>&nbsp;</div>
 }
 
 export function AccountGroupColumn({
-  title,
-  accounts,
-  total,
-  group,
-  targetRows,
+  title, accounts, total, group, targetRows,
 }: {
   title: string
   accounts: Account[]
@@ -54,37 +48,30 @@ export function AccountGroupColumn({
 }) {
   const color = GROUP_COLOR[group]
   const padCount = Math.max(0, targetRows - accounts.length)
-  const isNegativeTotal = total < 0
 
   return (
     <div className="flex-1 min-w-0 bg-white border border-gray-200 rounded-xl overflow-hidden">
-      {/* Header */}
-      <div
-        className="px-3 py-2.5 border-b font-bold text-sm text-center text-white"
-        style={{ backgroundColor: color }}
-      >
+      <div className="px-3 py-2.5 border-b font-bold text-sm text-center text-white" style={{ backgroundColor: color }}>
         {title}
       </div>
-      {/* Account rows */}
       <div>
-        {accounts.map(acc => <AccountRow key={acc.name} account={acc} />)}
-        {Array.from({ length: padCount }, (_, i) => <EmptyRow key={`pad-${i}`} />)}
+        {accounts.map((acc, i) => <AccountRow key={acc.name} account={acc} index={i} />)}
+        {Array.from({ length: padCount }, (_, i) => (
+          <EmptyRow key={`pad-${i}`} index={accounts.length + i} />
+        ))}
       </div>
-      {/* Total */}
       <div
         className="px-3 py-2.5 flex items-center justify-between border-t font-bold text-sm text-white"
         style={{ backgroundColor: color }}
       >
         <span>סה"כ</span>
-        <span className={clsx('tabular-nums', isNegativeTotal ? 'opacity-80' : '')}>
-          {formatCurrency(total)}
-        </span>
+        <span className="tabular-nums">{formatCurrency(total)}</span>
       </div>
     </div>
   )
 }
 
-// ── legacy exports kept for pages that still import them ──────────────────────
+// ── legacy exports ────────────────────────────────────────────────────────────
 
 export function AccountCard({ account }: { account: Account }) {
   const navigate = useNavigate()
@@ -101,7 +88,7 @@ export function AccountCard({ account }: { account: Account }) {
       onClick={() => navigate(`/accounts/${encodeURIComponent(account.name)}`)}
       className={clsx(
         'w-full text-right p-4 rounded-xl border transition-all hover:shadow-md hover:-translate-y-0.5 cursor-pointer',
-        isNegative ? 'bg-red-50 border-red-200 hover:border-red-300' : 'bg-white border-gray-200 hover:border-blue-300',
+        isNegative ? 'bg-red-50 border-red-200' : 'bg-white border-gray-200 hover:border-blue-300',
       )}
     >
       <p className="text-sm font-medium text-gray-600 truncate">{account.name}</p>
@@ -115,9 +102,7 @@ export function AccountCard({ account }: { account: Account }) {
 export function AccountGroupSection({
   title, accounts, total,
 }: {
-  title: string
-  accounts: Account[]
-  total: number
+  title: string; accounts: Account[]; total: number
 }) {
   const isNegativeTotal = total < 0
   return (
