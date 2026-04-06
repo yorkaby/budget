@@ -18,7 +18,8 @@ export interface Account {
   group: AccountGroup
   balance: number
   isLoan?: boolean
-  eurBalance?: number  // only for EUR accounts (LAYA)
+  eurBalance?: number   // only for EUR accounts (LAYA)
+  balanceILS?: number   // ILS equivalent for EUR accounts
 }
 
 export interface Category {

@@ -88,7 +88,7 @@ export function Transactions() {
   if (error) return <ErrorScreen message={(error as Error).message} />
 
   return (
-    <div className="p-6 max-w-screen-xl mx-auto" dir="rtl">
+    <div className="p-3 md:p-6 max-w-screen-xl mx-auto" dir="rtl">
       <div className="flex items-center justify-between mb-5">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">טרנזקציות</h1>
@@ -103,11 +103,11 @@ export function Transactions() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4 mb-5 flex flex-wrap gap-3">
+      <div className="bg-white border border-gray-200 rounded-xl p-3 mb-4 flex flex-wrap gap-2">
         <select
           value={filterMonth}
           onChange={e => { setFilterMonth(e.target.value); setPage(0) }}
-          className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white"
+          className="text-xs md:text-sm border border-gray-300 rounded-lg px-2 py-1.5 md:px-3 md:py-2 bg-white"
         >
           <option value="">כל החודשים</option>
           {monthOptions.map(o => (
@@ -118,7 +118,7 @@ export function Transactions() {
         <select
           value={filterType}
           onChange={e => { setFilterType(e.target.value as TransactionType | ''); setPage(0) }}
-          className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white"
+          className="text-xs md:text-sm border border-gray-300 rounded-lg px-2 py-1.5 md:px-3 md:py-2 bg-white"
         >
           <option value="">כל הסוגים</option>
           <option value="הכנסה">הכנסה</option>
@@ -129,7 +129,7 @@ export function Transactions() {
         <select
           value={filterAccount}
           onChange={e => { setFilterAccount(e.target.value); setPage(0) }}
-          className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white"
+          className="text-xs md:text-sm border border-gray-300 rounded-lg px-2 py-1.5 md:px-3 md:py-2 bg-white"
         >
           <option value="">כל החשבונות</option>
           {accounts.map(a => <option key={a} value={a}>{a}</option>)}
@@ -138,7 +138,7 @@ export function Transactions() {
         <select
           value={filterCategory}
           onChange={e => { setFilterCategory(e.target.value); setPage(0) }}
-          className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white"
+          className="text-xs md:text-sm border border-gray-300 rounded-lg px-2 py-1.5 md:px-3 md:py-2 bg-white"
         >
           <option value="">כל הקטגוריות</option>
           {cats.map(c => <option key={c} value={c}>{c}</option>)}
@@ -154,43 +154,45 @@ export function Transactions() {
         )}
       </div>
 
-      {/* Table */}
+      {/* Table — horizontally scrollable on mobile */}
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="text-right px-4 py-3 font-semibold text-gray-600 cursor-pointer hover:text-gray-900" onClick={() => toggleSort('date')}>
-                תאריך <SortIcon k="date" />
-              </th>
-              <th className="text-right px-4 py-3 font-semibold text-gray-600">סוג</th>
-              <th className="text-right px-4 py-3 font-semibold text-gray-600">מחשבון</th>
-              <th className="text-right px-4 py-3 font-semibold text-gray-600">לחשבון</th>
-              <th className="text-right px-4 py-3 font-semibold text-gray-600">קטגוריה</th>
-              <th className="text-right px-4 py-3 font-semibold text-gray-600 cursor-pointer hover:text-gray-900" onClick={() => toggleSort('amount')}>
-                סכום <SortIcon k="amount" />
-              </th>
-              <th className="text-right px-4 py-3 font-semibold text-gray-600">הערות</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginated.map((tx: Transaction, i: number) => (
-              <tr key={i} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{formatDate(tx.date)}</td>
-                <td className="px-4 py-3"><TypeBadge type={tx.type} /></td>
-                <td className="px-4 py-3 text-gray-800">{tx.from_account}</td>
-                <td className="px-4 py-3 text-gray-500">{tx.to_account || '—'}</td>
-                <td className="px-4 py-3 text-gray-600">{tx.category || '—'}</td>
-                <td className={`px-4 py-3 font-semibold whitespace-nowrap ${tx.type === 'הכנסה' ? 'text-green-600' : tx.type === 'הוצאה' ? 'text-red-600' : 'text-blue-600'}`}>
-                  {formatCurrency(tx.amount)}
-                </td>
-                <td className="px-4 py-3 text-gray-400 text-xs max-w-xs truncate">{tx.description || '—'}</td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs md:text-sm min-w-[600px]">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="text-right px-2 md:px-4 py-2.5 font-semibold text-gray-600 cursor-pointer hover:text-gray-900 whitespace-nowrap" onClick={() => toggleSort('date')}>
+                  תאריך <SortIcon k="date" />
+                </th>
+                <th className="text-right px-2 md:px-4 py-2.5 font-semibold text-gray-600 whitespace-nowrap">סוג</th>
+                <th className="text-right px-2 md:px-4 py-2.5 font-semibold text-gray-600 whitespace-nowrap">מחשבון</th>
+                <th className="text-right px-2 md:px-4 py-2.5 font-semibold text-gray-600 whitespace-nowrap">לחשבון</th>
+                <th className="text-right px-2 md:px-4 py-2.5 font-semibold text-gray-600 whitespace-nowrap">קטגוריה</th>
+                <th className="text-right px-2 md:px-4 py-2.5 font-semibold text-gray-600 cursor-pointer hover:text-gray-900 whitespace-nowrap" onClick={() => toggleSort('amount')}>
+                  סכום <SortIcon k="amount" />
+                </th>
+                <th className="text-right px-2 md:px-4 py-2.5 font-semibold text-gray-600 whitespace-nowrap">הערות</th>
               </tr>
-            ))}
-            {paginated.length === 0 && (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">אין תוצאות</td></tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {paginated.map((tx: Transaction, i: number) => (
+                <tr key={i} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                  <td className="px-2 md:px-4 py-2.5 text-gray-600 whitespace-nowrap">{formatDate(tx.date)}</td>
+                  <td className="px-2 md:px-4 py-2.5"><TypeBadge type={tx.type} /></td>
+                  <td className="px-2 md:px-4 py-2.5 text-gray-800 whitespace-nowrap">{tx.from_account}</td>
+                  <td className="px-2 md:px-4 py-2.5 text-gray-500 whitespace-nowrap">{tx.to_account || '—'}</td>
+                  <td className="px-2 md:px-4 py-2.5 text-gray-600 whitespace-nowrap">{tx.category || '—'}</td>
+                  <td className={`px-2 md:px-4 py-2.5 font-semibold whitespace-nowrap ${tx.type === 'הכנסה' ? 'text-green-600' : tx.type === 'הוצאה' ? 'text-red-600' : 'text-blue-600'}`}>
+                    {formatCurrency(tx.amount)}
+                  </td>
+                  <td className="px-2 md:px-4 py-2.5 text-gray-400 max-w-[120px] truncate">{tx.description || '—'}</td>
+                </tr>
+              ))}
+              {paginated.length === 0 && (
+                <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">אין תוצאות</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Pagination */}

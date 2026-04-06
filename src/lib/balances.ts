@@ -95,12 +95,14 @@ export function buildAccounts(transactions: Transaction[]): Account[] {
     .filter(name => ACCOUNT_GROUPS[name])
     .map(name => {
       const isEur = EUR_ACCOUNTS.has(name)
+      const ilsBalance = computeBalance(name, transactions)
       return {
         name,
         group: ACCOUNT_GROUPS[name],
-        balance: isEur ? 0 : computeBalance(name, transactions),
+        balance: isEur ? 0 : ilsBalance,
         isLoan: LOAN_ACCOUNTS.has(name),
         eurBalance: isEur ? computeEurBalance(name, transactions) : undefined,
+        balanceILS: isEur ? ilsBalance : undefined,
       }
     })
     .sort((a, b) => {

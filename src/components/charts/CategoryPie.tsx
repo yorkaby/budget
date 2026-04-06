@@ -1,87 +1,94 @@
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts'
-import { Transaction, Category } from '../../types'
-import { parseDate } from '../../lib/dates'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts'
+import { Account } from '../../types'
 
-const COLORS = [
-  '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
-  '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1',
-]
-
-function formatShekels(val: number) {
+function fmt(val: number) {
+  if (Math.abs(val) >= 1000) return `₪${(val / 1000).toFixed(1)}K`
   return `₪${val.toLocaleString('he-IL', { maximumFractionDigits: 0 })}`
 }
 
-export function CategoryPie({
-  transactions,
-  categories,
-  year,
-  month,
-}: {
-  transactions: Transaction[]
-  categories: Category[]
-  year: number
-  month: number
-}) {
-  // Build parent lookup
-  const parentOf: Record<string, string> = {}
-  categories.forEach(c => {
-    parentOf[c.name] = c.parent || c.name
-  })
+const TEAL = '#0d9488'
+const DARK = '#374151'
+const NEG  = '#dc2626'
 
-  const totals: Record<string, number> = {}
-  transactions.forEach(tx => {
-    if (tx.type !== 'הוצאה') return
-    const d = parseDate(tx.date)
-    if (!d || d.getFullYear() !== year || d.getMonth() !== month) return
-    const parent = parentOf[tx.category] || tx.category || 'אחר'
-    totals[parent] = (totals[parent] || 0) + tx.amount
-  })
-
-  const data = Object.entries(totals)
-    .filter(([, v]) => v > 0)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 9)
-    .map(([name, value]) => ({ name, value: Math.round(value) }))
-
-  if (data.length === 0) {
-    return (
-      <div className="bg-white rounded-xl border border-gray-200 p-5 flex items-center justify-center h-72">
-        <p className="text-gray-400 text-sm">אין הוצאות החודש</p>
-      </div>
-    )
-  }
+// Savings account balances — teal/red bars
+export function SavingsBalancesBar({ accounts }: { accounts: Account[] }) {
+  const data = accounts
+    .filter(a => a.group === 'savings')
+    .sort((a, b) => b.balance - a.balance)
+    .map(a => ({ name: a.name, value: Math.round(a.balance) }))
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5">
-      <h3 className="text-sm font-semibold text-gray-700 mb-4">הוצאות לפי קטגוריה</h3>
-      <ResponsiveContainer width="100%" height={220}>
-        <PieChart>
-          <Pie
-            data={data}
-            cx="50%"
-            cy="50%"
-            innerRadius={55}
-            outerRadius={90}
-            paddingAngle={2}
-            dataKey="value"
-          >
-            {data.map((_, idx) => (
-              <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
-            ))}
-          </Pie>
-          <Tooltip formatter={(v: number) => formatShekels(v)} />
-          <Legend
-            formatter={(val) => <span style={{ fontSize: 11 }}>{val}</span>}
-          />
-        </PieChart>
-      </ResponsiveContainer>
+    <div className="bg-white rounded-xl border border-gray-200 p-4">
+      <h3 className="text-sm font-bold text-teal-700 mb-3 flex items-center gap-1.5">
+        <span className="w-3 h-3 rounded-sm bg-teal-600 inline-block" />
+        חסכונות
+      </h3>
+      {data.length === 0
+        ? <div className="h-44 flex items-center justify-center text-gray-400 text-sm">אין נתונים</div>
+        : (
+          <ResponsiveContainer width="100%" height={180}>
+            <BarChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 32 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f5f5f5" vertical={false} />
+              <XAxis
+                dataKey="name"
+                tick={{ fontSize: 10, fill: '#555' }}
+                angle={-30}
+                textAnchor="end"
+                interval={0}
+                height={48}
+              />
+              <YAxis tickFormatter={fmt} tick={{ fontSize: 10 }} width={52} />
+              <Tooltip formatter={(v: number) => [`₪${v.toLocaleString('he-IL')}`, 'יתרה']} />
+              <ReferenceLine y={0} stroke="#999" />
+              <Bar dataKey="value" radius={[3, 3, 0, 0]}>
+                {data.map((d, i) => <Cell key={i} fill={d.value < 0 ? NEG : TEAL} />)}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        )}
     </div>
   )
 }
+
+// Long-term envelope balances — dark bars
+export function LongTermBalancesBar({ accounts }: { accounts: Account[] }) {
+  const data = accounts
+    .filter(a => a.group === 'long')
+    .sort((a, b) => b.balance - a.balance)
+    .map(a => ({ name: a.name, value: Math.round(a.balance) }))
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-4">
+      <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-1.5">
+        <span className="w-3 h-3 rounded-sm bg-gray-600 inline-block" />
+        מעטפות טווח ארוך
+      </h3>
+      {data.length === 0
+        ? <div className="h-44 flex items-center justify-center text-gray-400 text-sm">אין נתונים</div>
+        : (
+          <ResponsiveContainer width="100%" height={180}>
+            <BarChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 32 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f5f5f5" vertical={false} />
+              <XAxis
+                dataKey="name"
+                tick={{ fontSize: 10, fill: '#555' }}
+                angle={-30}
+                textAnchor="end"
+                interval={0}
+                height={48}
+              />
+              <YAxis tickFormatter={fmt} tick={{ fontSize: 10 }} width={52} />
+              <Tooltip formatter={(v: number) => [`₪${v.toLocaleString('he-IL')}`, 'יתרה']} />
+              <ReferenceLine y={0} stroke="#999" />
+              <Bar dataKey="value" radius={[3, 3, 0, 0]}>
+                {data.map((d, i) => <Cell key={i} fill={d.value < 0 ? NEG : DARK} />)}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+    </div>
+  )
+}
+
+// Keep old export name for backward compat
+export { SavingsBalancesBar as CategoryPie }
