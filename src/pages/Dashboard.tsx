@@ -8,6 +8,7 @@ import { SavingsBalancesBar, LongTermBalancesBar } from '../components/charts/Ca
 import { LoadingScreen, ErrorScreen } from '../components/ui/Spinner'
 import { filterByMonth, formatCurrency, getHebrewMonthName } from '../lib/dates'
 import { Account, AccountGroup } from '../types'
+import { useEurRate } from '../hooks/useEurRate'
 
 const GROUP_ORDER: AccountGroup[] = ['short', 'long', 'savings']
 
@@ -17,6 +18,7 @@ const CHECKING_ACCOUNTS = new Set(['דיסקונט', 'קניות', 'קניות �
 export function Dashboard() {
   const { data: transactions = [], isLoading, error, dataUpdatedAt } = useTransactions()
   const { data: categories = [] } = useCategories()
+  const { data: eurRate } = useEurRate()
   const refresh = useRefreshAll()
 
   const now = new Date()
@@ -45,9 +47,12 @@ export function Dashboard() {
   const byGroup: Record<AccountGroup, Account[]> = { short: [], long: [], savings: [] }
   accounts.forEach(a => byGroup[a.group].push(a))
 
-  // Short-term total: use ILS balance for LAYA (balanceILS), regular balance for others
+  // Short-term total: ILS accounts + LAYA EUR × live BOI rate (fallback: last tx rate)
   const shortTotal = byGroup.short.reduce((s, a) => {
-    if (a.balanceILS !== undefined) return s + a.balanceILS
+    if (a.eurBalance !== undefined) {
+      const rate = eurRate ?? a.balanceILS! / (a.eurBalance || 1)
+      return s + a.eurBalance * rate
+    }
     return s + a.balance
   }, 0)
 
