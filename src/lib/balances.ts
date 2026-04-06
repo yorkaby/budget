@@ -30,9 +30,9 @@ export const ACCOUNT_GROUPS: Record<string, AccountGroup> = {
 }
 
 export const GROUP_LABELS: Record<AccountGroup, string> = {
-  short: 'טווח קצר (עו"ש)',
-  long: 'טווח ארוך (קרן כספית)',
-  savings: 'חסכונות והשקעות',
+  short: 'מעטפות טווח קצר 💸',
+  long: 'מעטפות טווח ארוך ✉️',
+  savings: 'חסכונות 💰',
 }
 
 export const LOAN_ACCOUNTS = new Set(['הלוואה דיסקונט'])

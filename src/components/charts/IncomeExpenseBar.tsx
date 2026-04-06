@@ -7,12 +7,22 @@ function fmt(val: number) {
   return `₪${val.toLocaleString('he-IL', { maximumFractionDigits: 0 })}`
 }
 
+function ChartWrapper({ title, color, children }: { title: string; color: string; children: React.ReactNode }) {
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-4 flex flex-col">
+      <h3 className={`text-sm font-bold mb-3 flex items-center gap-1.5 ${color}`}>
+        {title}
+      </h3>
+      <div className="flex-1 min-h-0" style={{ height: 260 }}>
+        {children}
+      </div>
+    </div>
+  )
+}
+
 // Expenses by category — vertical red bars
 export function ExpensesCategoryBar({
-  transactions,
-  categories,
-  year,
-  month,
+  transactions, categories, year, month,
 }: {
   transactions: Transaction[]
   categories: Category[]
@@ -38,43 +48,36 @@ export function ExpensesCategoryBar({
     .map(([name, value]) => ({ name, value: Math.round(value) }))
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4">
-      <h3 className="text-sm font-bold text-red-600 mb-3 flex items-center gap-1.5">
-        <span className="w-3 h-3 rounded-sm bg-red-500 inline-block" />
-        הוצאות
-      </h3>
+    <ChartWrapper title="הוצאות" color="text-red-600">
       {data.length === 0
-        ? <div className="h-44 flex items-center justify-center text-gray-400 text-sm">אין נתונים</div>
+        ? <div className="h-full flex items-center justify-center text-gray-400 text-sm">אין נתונים</div>
         : (
-          <ResponsiveContainer width="100%" height={180}>
-            <BarChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 32 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f5f5f5" vertical={false} />
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data} margin={{ top: 20, right: 8, left: 8, bottom: 60 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
               <XAxis
                 dataKey="name"
-                tick={{ fontSize: 10, fill: '#555' }}
-                angle={-30}
+                tick={{ fontSize: 11, fill: '#444' }}
+                angle={-35}
                 textAnchor="end"
                 interval={0}
-                height={48}
+                height={60}
               />
-              <YAxis tickFormatter={fmt} tick={{ fontSize: 10 }} width={48} />
+              <YAxis tickFormatter={fmt} tick={{ fontSize: 10, fill: '#666' }} width={56} />
               <Tooltip formatter={(v: number) => [`₪${v.toLocaleString('he-IL')}`, 'הוצאה']} />
-              <Bar dataKey="value" radius={[3, 3, 0, 0]} label={{ position: 'top', fontSize: 9, fill: '#666', formatter: fmt }}>
+              <Bar dataKey="value" radius={[3, 3, 0, 0]} label={{ position: 'top', fontSize: 9, fill: '#888', formatter: fmt }}>
                 {data.map((_, i) => <Cell key={i} fill="#dc2626" />)}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
         )}
-    </div>
+    </ChartWrapper>
   )
 }
 
 // Income by category — vertical green bars
 export function IncomeCategoryBar({
-  transactions,
-  categories,
-  year,
-  month,
+  transactions, categories, year, month,
 }: {
   transactions: Transaction[]
   categories: Category[]
@@ -99,36 +102,31 @@ export function IncomeCategoryBar({
     .map(([name, value]) => ({ name, value: Math.round(value) }))
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4">
-      <h3 className="text-sm font-bold text-green-600 mb-3 flex items-center gap-1.5">
-        <span className="w-3 h-3 rounded-sm bg-green-500 inline-block" />
-        הכנסות
-      </h3>
+    <ChartWrapper title="הכנסות" color="text-green-600">
       {data.length === 0
-        ? <div className="h-44 flex items-center justify-center text-gray-400 text-sm">אין נתונים</div>
+        ? <div className="h-full flex items-center justify-center text-gray-400 text-sm">אין נתונים</div>
         : (
-          <ResponsiveContainer width="100%" height={180}>
-            <BarChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 32 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f5f5f5" vertical={false} />
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data} margin={{ top: 20, right: 8, left: 8, bottom: 60 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
               <XAxis
                 dataKey="name"
-                tick={{ fontSize: 10, fill: '#555' }}
-                angle={-30}
+                tick={{ fontSize: 11, fill: '#444' }}
+                angle={-35}
                 textAnchor="end"
                 interval={0}
-                height={48}
+                height={60}
               />
-              <YAxis tickFormatter={fmt} tick={{ fontSize: 10 }} width={48} />
+              <YAxis tickFormatter={fmt} tick={{ fontSize: 10, fill: '#666' }} width={56} />
               <Tooltip formatter={(v: number) => [`₪${v.toLocaleString('he-IL')}`, 'הכנסה']} />
-              <Bar dataKey="value" radius={[3, 3, 0, 0]} label={{ position: 'top', fontSize: 9, fill: '#666', formatter: fmt }}>
+              <Bar dataKey="value" radius={[3, 3, 0, 0]} label={{ position: 'top', fontSize: 9, fill: '#888', formatter: fmt }}>
                 {data.map((_, i) => <Cell key={i} fill="#16a34a" />)}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
         )}
-    </div>
+    </ChartWrapper>
   )
 }
 
-// Keep old export name as alias for backward compat
 export { ExpensesCategoryBar as IncomeExpenseBar }

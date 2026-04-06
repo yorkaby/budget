@@ -2,7 +2,7 @@ import { RefreshCw } from 'lucide-react'
 import { useTransactions, useRefreshAll } from '../hooks/useTransactions'
 import { useCategories } from '../hooks/useCategories'
 import { buildAccounts, GROUP_LABELS } from '../lib/balances'
-import { AccountGroupSection } from '../components/AccountCard'
+import { AccountGroupColumn } from '../components/AccountCard'
 import { ExpensesCategoryBar, IncomeCategoryBar } from '../components/charts/IncomeExpenseBar'
 import { SavingsBalancesBar, LongTermBalancesBar } from '../components/charts/CategoryPie'
 import { LoadingScreen, ErrorScreen } from '../components/ui/Spinner'
@@ -123,23 +123,25 @@ export function Dashboard() {
         <LongTermBalancesBar accounts={accounts} />
       </div>
 
-      {/* Account groups */}
-      {GROUP_ORDER.map(group => {
-        const accs = byGroup[group]
-        if (!accs.length) return null
-        // Use ILS total for short group
-        const total = group === 'short'
-          ? shortTotal
-          : accs.reduce((s, a) => s + a.balance, 0)
-        return (
-          <AccountGroupSection
-            key={group}
-            title={GROUP_LABELS[group]}
-            accounts={accs}
-            total={total}
-          />
-        )
-      })}
+      {/* Account groups — 3 vertical columns side by side */}
+      <div className="flex flex-col md:flex-row gap-3 md:gap-4">
+        {GROUP_ORDER.map(group => {
+          const accs = byGroup[group]
+          if (!accs.length) return null
+          const total = group === 'short'
+            ? shortTotal
+            : accs.reduce((s, a) => s + a.balance, 0)
+          return (
+            <AccountGroupColumn
+              key={group}
+              group={group}
+              title={GROUP_LABELS[group]}
+              accounts={accs}
+              total={total}
+            />
+          )
+        })}
+      </div>
     </div>
   )
 }
